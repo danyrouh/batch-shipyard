@@ -1,0 +1,10 @@
+job_specifications:
+- id: <job id>
+  auto_complete: true
+  shared_data_volumes:
+  - azureblob_vol
+  tasks:
+  - docker_image: msmadl/symsgd_datasharding:0.0.3
+    multi_instance:
+      num_instances: pool_current_dedicated
+    command: /parasail/deploy_data.sh
