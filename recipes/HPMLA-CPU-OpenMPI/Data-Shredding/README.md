@@ -1,27 +1,44 @@
-## HPMLA-CPU-OpenMPI Data Shredding
-This Data Shredding recipe shows how to shred and deploy your training data
-for HPMLA prior to running the training job on Azure VMs via Open MPI.
+# HPMLA-CPU-OpenMPI Data Sharding
+This recipe shows how to shred and deploy your training data prior to running a training job.  
+This module is offered as is.  It was designed to fit one deployment.  We encourage you to change the code to match your own data scenario.
 
-### Data Shredding Configuration
-Rename the `configuration-template.json` to `configuration.json`.
-The configuration should enable the following properties:
+## Configuration
+Please see refer to this [set of sample configuration files](./config) for
+this recipe.
 
-* `node_count` should be set to the number of VMs in the compute pool.
-* `thread_count` thread's count per VM.
-* `training_data_shred_count` It's advisable to set this number high. This way you only do this step once, and use it for different VMs configuration.
-* `dataset_local_directory` A local directory to download and shred the training data according to `training_data_shred_count`.
-* `shredded_dataset_Per_Node` A local directory to hold the final data shreds before deploying them to Azure blobs.
-* `container_name` container name where the sliced data will be stored.
-* `trainind_dataset_name` name for the dataset.  Used when creating the data blobs.
-* `subscription_id` Azure subscription id.
-* `secret_key` Azure password.
-* `resource_group` Resource group name.
-* `storage_account` storage account name and access key.
-* `training_data_container_name` Container name where the training data is hosted.
+### Pool Configuration
+The pool configuration should enable the following properties:
+* The VM count should the VM count for the SymSGD training job minus one.  The SymSGD requires one VM to act as master node.
+For an example: You plan to run your training job on 33 VMs.  You shred the data on 32 VMs.
+* `inter_node_communication_enabled` must be set to `true`
+* `max_tasks_per_node` must be set to 1 or omitted
 
-You can use your own access mechanism (password, access key, etc.). Above is
-only a one example.  Although, make sure to update the python script
-every time you make a configuration change.
+### Global Configuration
+The global configuration should set the following properties:
+* `docker_images` array must have a reference to a valid HPMLA
+Docker image that can be run with OpenMPI. The image denoted with `0.0.3`
+tag found in [msmadl/symsgd_datasharding:0.0.3](https://hub.docker.com/r/msmadl/symsgd_datasharding/)
+is compatible with Azure Batch Shipyard VMs.
+
+### MPI Jobs Configuration (MultiNode)
+The jobs configuration should set the following properties within the `tasks`
+array which should have a task definition containing:
+* `docker_image` should be the name of the Docker image for this container
+invocation. For this example, this should be
+`msmadl/symsgd_datasharding:0.0.3`.
+Please note that the `docker_images` in the Global Configuration should match
+this image name.
+* `command` should contain the command to pass to the Docker run invocation.
+For this HPMLA training example with the `msmadl/symsgd_datasharding:0.0.3` Docker image. The
+application `command` to run would be:
+`"/parasail/deploy_data.sh"`
+
+* `multi_instance` property must be defined
+  * `num_instances` should be set to `pool_current_dedicated`, or
+    `pool_current_low_priority`
+
+## Dockerfile and supplementary files
+Supplementary files can be found [here](./docker).
 
 You must agree to the following licenses prior to use:
 * [High Performance ML Algorithms License](https://github.com/saeedmaleki/Distributed-Linear-Learner/blob/master/High%20Performance%20ML%20Algorithms%20-%20Standalone%20(free)%20Use%20Terms%20V2%20(06-06-18).txt)
