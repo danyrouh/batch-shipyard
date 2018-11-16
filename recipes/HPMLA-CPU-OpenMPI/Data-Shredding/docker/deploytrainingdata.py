@@ -40,10 +40,9 @@ class Configuration:
             conf = json.load(f)
 
         try:
-            self.resource_group = encode(conf['resource_group'])
             self.data_prefix = encode(conf['data_prefix'])
-            self.data_container_name = encode(conf['data_container_name'])
             self.data_local_dir = encode(conf['data_local_dir'])
+            self.data_container_name = encode(conf['data_container_name'])
             self.storage_account_name = encode(conf['storage_account']['name'])
             self.storage_account_key = encode(conf['storage_account']['key'])
             self.input_data_container_name = encode(conf['input_data_container_name'])
@@ -52,7 +51,7 @@ class Configuration:
         except KeyError as err:
             raise AttributeError('Please provide a value for "{0}" configuration key'.format(err.args[0]))
         
-# load eh configuration data
+# load the configuration data
 cfg = Configuration('/parasail/configuration.json')
 
 # azure block service object
